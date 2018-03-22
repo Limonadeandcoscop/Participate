@@ -55,6 +55,7 @@ class Participate_ParticipateController extends Omeka_Controller_AbstractActionC
                     $links = array();
                     $countfiles = count($_FILES['file']['name']);
                     for ($i=0;$i<$countfiles;$i++) {
+                        if (!$_FILES['file']['name'][$i]) continue;
                         $filename = preg_replace("/[^a-z0-9-\.]/", "", strtolower($_FILES['file']['name'][$i]));
                         $filename = ($i+1) .'_'. mktime() .'_'.$filename;
                         $path = PARTICIPATE_UPLOADS_DIR .'/'. $filename;
@@ -63,7 +64,7 @@ class Participate_ParticipateController extends Omeka_Controller_AbstractActionC
                     }
 
                     $this->_administratorEmail($item, $comment, $links);
-                    $this->_helper->redirector->gotoRoute(array(), 'participate_confirmation');
+                    /$this->_helper->redirector->gotoRoute(array(), 'participate_confirmation');
                 }
             }
         }
