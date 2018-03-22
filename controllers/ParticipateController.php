@@ -35,14 +35,15 @@ class Participate_ParticipateController extends Omeka_Controller_AbstractActionC
 
                 $errors = false;
                 foreach($files as $key => $file) {
-
                     // Check extension
                     if ($key == 'name') {
                         foreach($file as $f) {
-                            $extension = pathinfo($f)['extension'];
-                            if (!in_array($extension, $allowedExtensions)) {
-                                $this->_helper->flashMessenger(__("The extension '$extension' is not allowed"), 'error');
-                                $errors = true;
+                            if (strlen(trim($f))) {
+                                $extension = pathinfo($f)['extension'];
+                                if (!in_array($extension, $allowedExtensions)) {
+                                    $this->_helper->flashMessenger(__("The extension '$extension' is not allowed"), 'error');
+                                    $errors = true;
+                                }
                             }
                         }
                     }
@@ -62,11 +63,17 @@ class Participate_ParticipateController extends Omeka_Controller_AbstractActionC
                     }
 
                     $this->_administratorEmail($item, $comment, $links);
+                    $this->_helper->redirector->gotoRoute(array(), 'participate_confirmation');
                 }
             }
         }
 
         $this->view->item = $item;  
+    }
+
+
+    public function confirmationAction() {
+
     }
 
 
