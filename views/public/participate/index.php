@@ -2,6 +2,17 @@
 
 <h1><?php echo __('Participate') ?></h1>
 
+<p><?php echo OJ_get_text_value($this->values($item, 'identifier')) ?></p>
+
+<h3><?php echo OJ_get_text_value($this->values($item, 'title')) ?></h3>
+
+<p>
+	<?php echo __('Would you like to post a transcription ? Have you got some comments ?') ?><br />
+	<?php echo __('Please feel free to send me a message.') ?><br />
+	<?php echo __('We will reply as soon as possible!') ?>
+</p>	
+
+
 <form action="#" method="post" enctype='multipart/form-data'>
 
 <?php echo flash(); ?>
