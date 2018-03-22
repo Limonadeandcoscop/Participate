@@ -64,7 +64,7 @@ class Participate_ParticipateController extends Omeka_Controller_AbstractActionC
                     }
 
                     $this->_administratorEmail($item, $comment, $links);
-                    /$this->_helper->redirector->gotoRoute(array(), 'participate_confirmation');
+                    $this->_helper->redirector->gotoRoute(array(), 'participate_confirmation');
                 }
             }
         }
