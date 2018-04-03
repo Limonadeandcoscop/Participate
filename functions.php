@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Send the subscription link
+ * Send an email
  *
  * If $params['to'] isn't specify, send the email to current user
  *
@@ -9,7 +9,7 @@
  * @param Boolean $debug Whether of not dispays debug info and send the mail
  * @return void
  */
-function newsletter_send_mail($params, $debug = false) {
+function participate_plugin_send_mail($params, $debug = false) {
 
 	$user		= current_user();
 	$subject	= $params['subject'];
