@@ -2,11 +2,11 @@
 
 class Participate_ParticipateController extends Omeka_Controller_AbstractActionController {
 
-    
+
     public function init() {
     }
 
-   
+
     public function indexAction() {
 
         $item_id = $this->getParam('item-id');
@@ -19,57 +19,79 @@ class Participate_ParticipateController extends Omeka_Controller_AbstractActionC
             throw new Exception("Invalid item");
         }
 
+
+        $captchaObj = null;
+        if(!current_user()) {
+            $captchaObj = $this->_setupCaptcha();
+        }
+
         if ($this->getRequest()->isPost()) {
 
-            if (!($comment = $this->getParam('comment'))) {
+            if ($captchaObj and !$captchaObj->isValid('foo', $_POST)) {
 
-                $this->_helper->flashMessenger(__('The comment is required'), 'error');
+                $this->_helper->flashMessenger(__('Your CAPTCHA submission was invalid, please try again.'));
 
             } else {
 
-                $this->view->comment = $comment;
+                if (!($comment = $this->getParam('comment'))) {
 
-                $allowedExtensions  = explode(',', get_option('file_extension_whitelist'));
+                    $this->_helper->flashMessenger(__('The comment is required'), 'error');
 
-                $files = $_FILES['file'];
+                } else {
 
-                $errors = false;
-                foreach($files as $key => $file) {
-                    // Check extension
-                    if ($key == 'name') {
-                        foreach($file as $f) {
-                            if (strlen(trim($f))) {
-                                $extension = pathinfo($f)['extension'];
-                                if (!in_array($extension, $allowedExtensions)) {
-                                    $this->_helper->flashMessenger(__("The extension '$extension' is not allowed"), 'error');
-                                    $errors = true;
+                    $this->view->comment = $comment;
+
+                    $allowedExtensions  = explode(',', get_option('file_extension_whitelist'));
+
+                    $files = $_FILES['file'];
+
+                    $errors = false;
+                    foreach($files as $key => $file) {
+                        // Check extension
+                        if ($key == 'name') {
+                            foreach($file as $f) {
+                                if (strlen(trim($f))) {
+                                    $extension = pathinfo($f)['extension'];
+                                    if (!in_array($extension, $allowedExtensions)) {
+                                        $this->_helper->flashMessenger(__("The extension '$extension' is not allowed"), 'error');
+                                        $errors = true;
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                if (!$errors) {
+                    if (!$errors) {
 
-                    // Store files on server
-                    $links = array();
-                    $countfiles = count($_FILES['file']['name']);
-                    for ($i=0;$i<$countfiles;$i++) {
-                        if (!$_FILES['file']['name'][$i]) continue;
-                        $filename = preg_replace("/[^a-z0-9-\.]/", "", strtolower($_FILES['file']['name'][$i]));
-                        $filename = ($i+1) .'_'. mktime() .'_'.$filename;
-                        $path = PARTICIPATE_UPLOADS_DIR .'/'. $filename;
-                        move_uploaded_file($_FILES['file']['tmp_name'][$i], $path);
-                        $links[] = absolute_url('plugins/Participate/uploads/' . $filename);
+                        // Store files on server
+                        $links = array();
+                        $countfiles = count($_FILES['file']['name']);
+                        for ($i=0;$i<$countfiles;$i++) {
+                            if (!$_FILES['file']['name'][$i]) continue;
+                            $filename = preg_replace("/[^a-z0-9-\.]/", "", strtolower($_FILES['file']['name'][$i]));
+                            $filename = ($i+1) .'_'. mktime() .'_'.$filename;
+                            $path = PARTICIPATE_UPLOADS_DIR .'/'. $filename;
+                            move_uploaded_file($_FILES['file']['tmp_name'][$i], $path);
+                            $links[] = absolute_url('plugins/Participate/uploads/' . $filename);
+                        }
+
+                        $this->_administratorEmail($item, $comment, $links);
+                        $this->_helper->redirector->gotoRoute(array(), 'participate_confirmation');
                     }
-
-                    $this->_administratorEmail($item, $comment, $links);
-                    $this->_helper->redirector->gotoRoute(array(), 'participate_confirmation');
                 }
             }
         }
 
-        $this->view->item = $item;  
+        // Render the HTML for the captcha itself.
+        // Pass this a blank Zend_View b/c ZF forces it.
+        if ($captchaObj) {
+            $captcha = $captchaObj->render(new Zend_View);
+        } else {
+            $captcha = '';
+        }
+
+        $this->view->captcha = $captcha;
+        $this->view->item = $item;
     }
 
 
@@ -77,6 +99,10 @@ class Participate_ParticipateController extends Omeka_Controller_AbstractActionC
 
     }
 
+    protected function _setupCaptcha()
+    {
+        return Omeka_Captcha::getCaptcha();
+    }
 
     /**
      * Send an email when a user participate
